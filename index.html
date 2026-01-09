@@ -3,176 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Store</title>
+    <title>シンプル・オセロ</title>
     <style>
-        :root { --primary: #2563eb; --secondary: #64748b; --success: #22c55e; --dark: #1e293b; --light: #f8fafc; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; background: var(--light); color: var(--dark); line-height: 1.6; }
-        header { background: white; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        
-        .container { max-width: 1100px; margin: 2rem auto; padding: 0 20px; }
-        
-        /* 商品カテゴリ */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .product-card { background: white; border-radius: 12px; padding: 15px; text-align: center; transition: transform 0.2s; border: 1px solid #e2e8f0; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .product-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
-        .product-card h3 { font-size: 1rem; margin: 10px 0; height: 2.4em; overflow: hidden; }
-        .price { color: var(--primary); font-weight: bold; font-size: 1.2rem; }
-        
-        .btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 10px; }
-        .btn:hover { opacity: 0.9; }
+        :root {
+            --board-color: #2e8b57; /* フェルトのような緑 */
+            --board-border: #1a5c38;
+            --black-piece: #111;
+            --white-piece: #eee;
+            --bg-color: #f0f2f5;
+        }
 
-        /* カート・決済セクション */
-        .checkout-container { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-top: 40px; }
-        .card-panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
-        
-        /* フォーム要素 */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .coupon-area { display: flex; gap: 10px; margin-top: 15px; }
-        
-        .badge { background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; }
-        @media (max-width: 768px) { .checkout-container { grid-template-columns: 1fr; } }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* スコアボードと情報表示エリア */
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            width: 340px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .score-box {
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .turn-indicator {
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+        /* 盤面のスタイル */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 360px;
+            height: 360px;
+            background-color: var(--board-color);
+            border: 5px solid var(--board-border);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* 石のスタイル */
+        .disc {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .disc.black {
+            background: radial-gradient(circle at 30% 30%, #444, var(--black-piece));
+        }
+
+        .disc.white {
+            background: radial-gradient(circle at 30% 30%, #fff, var(--white-piece));
+        }
+
+        /* 置ける場所のガイド */
+        .hint {
+            width: 30%;
+            height: 30%;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+        }
+
+        /* コントロールボタン */
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        /* 終了メッセージ */
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+            height: 1.2em;
+            color: #333;
+        }
+
     </style>
 </head>
 <body>
 
-<header>
-    <h2>TestStore</h2>
-    <div>🛒 カート: <span id="cart-count">0</span> 点</div>
-</header>
+    <h1>Othello Web</h1>
 
-<div class="container">
-    <div class="products-grid" id="product-list"></div>
-
-    <div class="checkout-container">
-        <div class="card-panel">
-            <h3>🛒 カートの中身</h3>
-            <div id="cart-items"><p style="color:gray">商品を追加してください</p></div>
-            
-            <div class="coupon-area">
-                <input type="text" id="coupon-input" placeholder="クーポンコード入力 (例: SAVE10)">
-                <button class="btn" onclick="applyCoupon()" style="width: auto; margin:0; background: var(--dark);">適用</button>
-            </div>
-            <p id="coupon-msg" style="font-size: 0.8rem; color: var(--success);"></p>
+    <div class="info-panel">
+        <div class="score-box">
+            <div>黒 (Black)</div>
+            <div id="score-black" class="score-value">2</div>
         </div>
-
-        <div class="card-panel">
-            <h3>💳 お支払い情報</h3>
-            <div class="form-group">
-                <label>配送先住所</label>
-                <input type="text" placeholder="東京都渋谷区...">
-            </div>
-            <div class="form-group">
-                <label>お支払い方法</label>
-                <select id="payment-method">
-                    <option value="credit">クレジットカード</option>
-                    <option value="paypay">PayPay / QR決済</option>
-                    <option value="bank">銀行振込</option>
-                    <option value="cod">代金引換</option>
-                </select>
-            </div>
-            <hr>
-            <div style="display:flex; justify-content:space-between; font-size:1.2rem; font-weight:bold;">
-                <span>合計金額:</span>
-                <span>¥<span id="total-price">0</span></span>
-            </div>
-            <button class="btn" style="background: var(--success); height: 50px; font-size: 1.1rem;" onclick="processOrder()">注文を確定する</button>
+        <div class="score-box">
+            <div>手番</div>
+            <div id="current-turn" class="turn-indicator">黒の番</div>
+        </div>
+        <div class="score-box">
+            <div>白 (White)</div>
+            <div id="score-white" class="score-value">2</div>
         </div>
     </div>
-</div>
 
-<script>
-    const products = [
-        { id: 1, name: "ワイヤレスイヤホン", price: 8800, img: "https://picsum.photos/id/1/200/140" },
-        { id: 2, name: "スマートウォッチ", price: 15000, img: "https://picsum.photos/id/2/200/140" },
-        { id: 3, name: "メカニカルキーボード", price: 12000, img: "https://picsum.photos/id/3/200/140" },
-        { id: 4, name: "高精度マウス", price: 5400, img: "https://picsum.photos/id/4/200/140" },
-        { id: 5, name: "USB-C ハブ", price: 3200, img: "https://picsum.photos/id/5/200/140" },
-        { id: 6, name: "ノートPCスタンド", price: 4500, img: "https://picsum.photos/id/6/200/140" },
-        { id: 7, name: "モバイルバッテリー", price: 3900, img: "https://picsum.photos/id/7/200/140" },
-        { id: 8, name: "デスクライト", price: 6800, img: "https://picsum.photos/id/8/200/140" },
-        { id: 9, name: "Webカメラ", price: 7200, img: "https://picsum.photos/id/9/200/140" },
-        { id: 10, name: "ポータブルSSD", price: 11000, img: "https://picsum.photos/id/10/200/140" }
-    ];
+    <div id="board" class="board">
+        </div>
 
-    let cart = [];
-    let discount = 0;
+    <div id="message"></div>
 
-    function init() {
-        const list = document.getElementById('product-list');
-        list.innerHTML = products.map(p => `
-            <div class="product-card">
-                <img src="${p.img}" alt="${p.name}">
-                <h3>${p.name}</h3>
-                <p class="price">¥${p.price.toLocaleString()}</p>
-                <button class="btn" onclick="addToCart(${p.id})">カートに追加</button>
-            </div>
-        `).join('');
-    }
+    <div class="controls">
+        <button onclick="initGame()">ゲームをリセット</button>
+    </div>
 
-    function addToCart(id) {
-        const product = products.find(p => p.id === id);
-        cart.push(product);
-        renderCart();
-    }
+    <script>
+        const BOARD_SIZE = 8;
+        const BLACK = 1;
+        const WHITE = -1;
+        const EMPTY = 0;
 
-    function renderCart() {
-        document.getElementById('cart-count').innerText = cart.length;
-        const container = document.getElementById('cart-items');
-        
-        if (cart.length === 0) {
-            container.innerHTML = '<p style="color:gray">商品を追加してください</p>';
-            document.getElementById('total-price').innerText = "0";
-            return;
+        let board = [];
+        let currentPlayer = BLACK;
+        let gameOver = false;
+
+        const boardElement = document.getElementById('board');
+        const messageElement = document.getElementById('message');
+        const scoreBlackElement = document.getElementById('score-black');
+        const scoreWhiteElement = document.getElementById('score-white');
+        const currentTurnElement = document.getElementById('current-turn');
+
+        // 方向ベクトル（8方向）
+        const DIRECTIONS = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1],  [1, 0],  [1, 1]
+        ];
+
+        // ゲーム初期化
+        function initGame() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
+            
+            // 初期配置
+            board[3][3] = WHITE;
+            board[3][4] = BLACK;
+            board[4][3] = BLACK;
+            board[4][4] = WHITE;
+
+            currentPlayer = BLACK;
+            gameOver = false;
+            messageElement.textContent = "";
+            renderBoard();
+            updateInfo();
         }
 
-        container.innerHTML = cart.map((item, idx) => `
-            <div class="cart-item">
-                <span>${item.name}</span>
-                <span>¥${item.price.toLocaleString()} <button onclick="removeItem(${idx})" style="border:none; background:none; cursor:pointer; color:red;">✕</button></span>
-            </div>
-        `).join('');
+        // 盤面描画
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            
+            // プレイヤーが置ける場所を計算
+            const validMoves = getValidMoves(currentPlayer);
 
-        let total = cart.reduce((sum, item) => sum + item.price, 0);
-        total = Math.max(0, total - discount);
-        document.getElementById('total-price').innerText = total.toLocaleString();
-    }
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
 
-    function removeItem(index) {
-        cart.splice(index, 1);
-        renderCart();
-    }
+                    // 石の描画
+                    if (board[row][col] !== EMPTY) {
+                        const disc = document.createElement('div');
+                        disc.classList.add('disc');
+                        disc.classList.add(board[row][col] === BLACK ? 'black' : 'white');
+                        cell.appendChild(disc);
+                    } 
+                    // ガイド（置ける場所）の描画
+                    else if (validMoves.some(m => m.r === row && m.c === col)) {
+                        const hint = document.createElement('div');
+                        hint.classList.add('hint');
+                        cell.appendChild(hint);
+                        
+                        // クリックイベント
+                        cell.addEventListener('click', () => handleMove(row, col));
+                    }
 
-    function applyCoupon() {
-        const code = document.getElementById('coupon-input').value;
-        if (code === "SAVE10") {
-            discount = 1000;
-            document.getElementById('coupon-msg').innerText = "クーポン適用: 1,000円割引";
-        } else {
-            alert("無効なクーポンです");
-            discount = 0;
-            document.getElementById('coupon-msg').innerText = "";
+                    boardElement.appendChild(cell);
+                }
+            }
         }
-        renderCart();
-    }
 
-    function processOrder() {
-        if (cart.length === 0) {
-            alert("カートが空です");
-            return;
+        // 石を置く処理
+        function handleMove(row, col) {
+            if (gameOver) return;
+
+            const flipped = getFlippedDiscs(row, col, currentPlayer);
+            if (flipped.length > 0) {
+                // 石を置く
+                board[row][col] = currentPlayer;
+                // ひっくり返す
+                flipped.forEach(pos => {
+                    board[pos.r][pos.c] = currentPlayer;
+                });
+
+                switchTurn();
+            }
         }
-        const method = document.getElementById('payment-method').value;
-        alert(`ご注文ありがとうございます！\n支払い方法: ${method}\n合計金額: ¥${document.getElementById('total-price').innerText}`);
-        cart = [];
-        discount = 0;
-        renderCart();
-    }
 
-    init();
-</script>
+        // 手番交代とパス判定
+        function switchTurn() {
+            updateInfo();
+            const opponent = currentPlayer * -1;
+            
+            // 相手に置ける場所があるか？
+            if (getValidMoves(opponent).length > 0) {
+                currentPlayer = opponent;
+            } else {
+                // 相手がパスの場合
+                // 自分に置ける場所があるか確認（連続手番）
+                if (getValidMoves(currentPlayer).length > 0) {
+                    messageElement.textContent = `${opponent === BLACK ? '黒' : '白'}は置ける場所がないためパスです`;
+                    // 手番は変わらない
+                } else {
+                    // 両者置けない場合 -> ゲーム終了
+                    endGame();
+                    return; // updateInfoを再度呼ばないようにここで抜けるか、下で呼ぶ
+                }
+            }
+            
+            renderBoard();
+            updateInfo();
+        }
+
+        // 裏返せる石のリストを取得
+        function getFlippedDiscs(row, col, player) {
+            if (board[row][col] !== EMPTY) return [];
+
+            let flipped = [];
+            const opponent = player * -1;
+
+            for (let [dr, dc] of DIRECTIONS) {
+                let r = row + dr;
+                let c = col + dc;
+                let tempFlipped = [];
+
+                // 盤面内かつ相手の石である間ループ
+                while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === opponent) {
+                    tempFlipped.push({r, c});
+                    r += dr;
+                    c += dc;
+                }
+
+                // ループ終了後、自分の石で挟めているか確認
+                if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                    flipped = flipped.concat(tempFlipped);
+                }
+            }
+            return flipped;
+        }
+
+        // 置ける場所のリストを取得
+        function getValidMoves(player) {
+            let moves = [];
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (getFlippedDiscs(r, c, player).length > 0) {
+                        moves.push({r, c});
+                    }
+                }
+            }
+            return moves;
+        }
+
+        // 情報更新（スコア・手番表示）
+        function updateInfo() {
+            let blackScore = 0;
+            let whiteScore = 0;
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c] === BLACK) blackScore++;
+                    if (board[r][c] === WHITE) whiteScore++;
+                }
+            }
+
+            scoreBlackElement.textContent = blackScore;
+            scoreWhiteElement.textContent = whiteScore;
+            
+            if (!gameOver) {
+                currentTurnElement.textContent = currentPlayer === BLACK ? "黒の番" : "白の番";
+                currentTurnElement.style.color = currentPlayer === BLACK ? "#000" : "#aaa";
+            }
+        }
+
+        // ゲーム終了処理
+        function endGame() {
+            gameOver = true;
+            renderBoard(); // ガイドを消すために再描画
+            
+            const blackScore = parseInt(scoreBlackElement.textContent);
+            const whiteScore = parseInt(scoreWhiteElement.textContent);
+            
+            let resultMsg = "";
+            if (blackScore > whiteScore) {
+                resultMsg = "黒の勝ち！";
+            } else if (whiteScore > blackScore) {
+                resultMsg = "白の勝ち！";
+            } else {
+                resultMsg = "引き分け！";
+            }
+            
+            messageElement.textContent = `ゲーム終了！ ${resultMsg}`;
+            currentTurnElement.textContent = "終了";
+        }
+
+        // 初回実行
+        initGame();
+
+    </script>
 </body>
 </html>
-
