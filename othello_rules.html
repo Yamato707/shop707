@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>オセロ（リバーシ）のルール説明</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #1e4d2b, #2a7541);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1e4d2b;
+            border-left: 5px solid #2a7541;
+            padding-left: 10px;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        p, li {
+            font-size: 1.05rem;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .othello-board {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            gap: 1px;
+            background-color: #333;
+            border: 5px solid #333;
+            width: fit-content;
+        }
+        .cell {
+            background-color: #007a3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .disc {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        .disc.black {
+            background-color: #111;
+        }
+        .disc.white {
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+        .disc.hint {
+            width: 12px;
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.4);
+            box-shadow: none;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .important {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        footer {
+            text-align: center;
+            margin-top: 4px;
+            font-size: 0.9rem;
+            color: #777;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>オセロのルール説明</h1>
+        <p>〜覚えるのは1分、極めるのは一生〜</p>
+    </header>
+
+    <section>
+        <h2>1. ゲームの概要</h2>
+        <p>オセロ（リバーシ）は、8×8の計64マスの盤面を使い、2人のプレイヤーが白と黒の石を交互に置いていくボードゲームです。最終的に盤面上にある自分の色の石が多い方が勝ちとなります。</p>
+    </section>
+
+    <section>
+        <h2>2. 初期配置</h2>
+        <p>ゲーム開始時、盤面の中央の4マスに、図のように黒と白の石を互い違いに2個ずつ配置します。</p>
+        <p>※一般的な公式ルールでは、<strong>右上が白</strong>になるように配置します（先手の黒から見て、右上と左下が白、左上と右下が黒）。</p>
+        
+        <div class="board-container">
+            <div class="othello-board">
+                <!-- Row 1-3 empty -->
+                <script>
+                    for(let i=0; i<24; i++) document.write('<div class="cell"></div>');
+                </script>
+                <!-- Row 4 -->
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"><div class="disc black"></div></div>
+                <div class="cell"><div class="disc white"></div></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <!-- Row 5 -->
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"><div class="disc white"></div></div>
+                <div class="cell"><div class="disc black"></div></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <!-- Row 6-8 empty -->
+                <script>
+                    for(let i=0; i<24; i++) document.write('<div class="cell"></div>');
+                </script>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>3. 石の打ち方と挟むルール</h2>
+        <ul>
+            <li>常に<span class="highlight">黒が先手（最初）</span>、白が後手となります。</li>
+            <li>プレイヤーは交互に自分の色の石を盤面に1手ずつ置いていきます。</li>
+            <li>石を置くときは、<span class="important">必ず相手の石を1枚以上挟める場所</span>でなければなりません。</li>
+            <li>挟む方向は、<strong>縦・横・斜め</strong>のどの方向でも構いません。</li>
+            <li>自分の石と新しく置いた石で挟まれた相手の石は、すべてひっくり返って自分の色になります。</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. パス（打てる場所がない場合）</h2>
+        <ul>
+            <li>盤面のどこかに相手の石を挟める場所がある限り、必ずどこかに打たなければなりません（パスは不可）。</li>
+            <li>もし、<span class="important">相手の石を挟める場所が1箇所もない場合のみ、「パス」</span>となり、相手の番になります。</li>
+            <li>両者ともに打てる場所がなくなるまで、ゲームは続きます。</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. ゲームの終了と勝敗</h2>
+        <p>以下のいずれかの状態になるとゲームが終了します。</p>
+        <ol>
+            <li>盤面の64マスがすべて石で埋まったとき。</li>
+            <li>両者ともに打てる場所がなくなったとき（盤面に空きマスがあっても終了）。</li>
+            <li>一方の石がすべてなくなり、全滅したとき。</li>
+        </ol>
+        <p>終了時に盤面の石を数え、<strong>枚数が多いプレイヤーの勝利</strong>となります。</p>
+    </section>
+
+    <section>
+        <h2>💡 初心者向けワンポイントコツ</h2>
+        <ul>
+            <li><strong>角（すみ）を取ろう：</strong> 盤面の四隅（A1, A8, H1, H8）は、一度取ると絶対に相手にひっくり返されない安全なマスです。</li>
+            <li><strong>序盤は取りすぎない：</strong> 序盤にたくさんの石を取りすぎると、後半に自分が打てる場所（相手を挟める場所）がなくなってしまい、相手に有利な展開を作られやすくなります。</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>© オセロルールガイド</p>
+    </footer>
+
+</body>
+</html>
